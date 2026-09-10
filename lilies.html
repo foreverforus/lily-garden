@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- ============================================================
+     FONTS
+     Cormorant Garamond — elegant serif for headlines & messages
+     Jost — light geometric sans for small UI text
+     ============================================================ -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --ivory:        #BEB4A9;
+  --ivory-deep:   #F3EEE4;
+  --ink:          #3A362E;
+  --ink-soft:     #8A8072;
+  --sage:         #6E7F63;
+  --sage-deep:    #4B5942;
+  --gold:         #C7A567;
+  --gold-soft:    #E8D3A5;
+  --blush:        #F6ECDF;
+  --glass-bg:     rgba(255,255,255,0.55);
+  --glass-border: rgba(255,255,255,0.85);
+  --shadow-soft:  0 20px 60px rgba(74,63,35,0.14);
+  --font-display: 'Cormorant Garamond', serif;
+  --font-ui:      'Jost', sans-serif;
+  --ease-soft: cubic-bezier(.22,.61,.36,1);
+}
+
+*{ box-sizing: border-box; }
+html,body{
+  margin:0; padding:0;
+  width:100%; min-height:100%;
+  background: var(--ivory);
+  color: var(--ink);
+  font-family: var(--font-ui);
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+button{ font-family: inherit; }
+a{ color: inherit; }
+
+::selection{ background: var(--gold-soft); color: var(--ink); }
+
+/* soft ambient vignette used on both screens */
+.ambient-bg{
+  position: fixed; inset: 0; z-index: 0; pointer-events:none;
+  background:
+    radial-gradient(60% 50% at 20% 15%, rgba(255,255,255,0.22), transparent 60%),
+    radial-gradient(70% 60% at 85% 80%, rgba(154,137,119,0.62), transparent 60%),
+    var(--ivory);
+}
+/* =================================================================
+   2. FLOATING PARTICLES (shared)
+   ================================================================= */
+.particle-field{
+  position: absolute; inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 1;
+}
+.particle{
+  position: absolute;
+  bottom: -5%;
+  width: var(--size);
+  height: var(--size);
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,255,255,0.95) 0%, rgba(230,215,180,0.35) 60%, transparent 75%);
+  opacity: 0;
+  animation: drift var(--dur) linear var(--delay) infinite;
+  filter: blur(0.3px);
+}
+@keyframes drift{
+  0%   { transform: translateY(0) translateX(0); opacity: 0; }
+  8%   { opacity: var(--peak, 0.7); }
+  90%  { opacity: var(--peak, 0.7); }
+  100% { transform: translateY(-110vh) translateX(var(--drift-x, 20px)); opacity: 0; }
+}
+
+/* =================================================================
+   3. PAGE 1 — LANDING
+   ================================================================= */
+#landing{
+  position: relative;
+  z-index: 2;
+  min-height: 100svh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 8vh 6vw;
+  transition: opacity 1s var(--ease-soft), transform 1s var(--ease-soft), filter 1s var(--ease-soft);
+}
+#landing.leaving{
+  opacity: 0;
+  transform: scale(1.04);
+  filter: blur(6px);
+  pointer-events: none;
+}
+.landing-inner{
+  max-width: 640px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 28px;
+}
+.landing-mark{
+  width: 46px; height: 46px;
+  opacity: 0.9;
+  animation: gentle-float 6s ease-in-out infinite;
+}
+@keyframes gentle-float{
+  0%,100%{ transform: translateY(0); }
+  50%{ transform: translateY(-8px); }
+}
+.landing-title{
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-style: italic;
+  font-size: clamp(2.4rem, 7vw, 4.2rem);
+  line-height: 1.15;
+  margin: 0;
+  color: var(--ink);
+  letter-spacing: 0.2px;
+}
+.landing-subtitle{
+  font-family: var(--font-ui);
+  font-weight: 500;
+  font-size: clamp(1rem, 2.2vw, 1.15rem);
+  color: var(--ink);
+  letter-spacing: 0.3px;
+  margin: 0;
+}
+.enter-btn{
+  margin-top: 18px;
+  padding: 16px 38px;
+  background: transparent;
+  border: 1px solid rgba(58,54,46,0.35);
+  border-radius: 999px;
+  color: #2E2A25;
+  font-family: var(--font-ui);
+  font-weight: 400;
+  font-size: 1rem;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: background 0.5s var(--ease-soft), border-color 0.5s var(--ease-soft), transform 0.4s var(--ease-soft), box-shadow 0.5s var(--ease-soft);
+}
+.enter-btn:hover{
+  background: rgba(255,255,255,0.7);
+  border-color: var(--gold);
+  box-shadow: 0 10px 30px rgba(199,165,103,0.25);
+  transform: translateY(-2px);
+}
+.enter-btn:active{ transform: translateY(0); }
+.enter-btn:focus-visible{ outline: 2px solid var(--gold); outline-offset: 3px; }
+
+/* =================================================================
+   4. PAGE 2 — GARDEN
+   ================================================================= */
+#garden{
+  position: relative;
+  z-index: 2;
+  display: none;
+  opacity: 0;
+  transition: opacity 1.1s var(--ease-soft);
+}
+#garden.visible{ display: block; opacity: 1; }
+
+.garden-header{
+  position: relative;
+  z-index: 3;
+  text-align: center;
+  padding: 9vh 6vw 2vh;
+}
+.garden-title{
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 500;
+  font-size: clamp(1.7rem, 4.5vw, 2.6rem);
+  margin: 0 0 10px;
+}
+.garden-hint{
+  font-family: var(--font-ui);
+  font-weight: 500;
+  font-size: 0.95rem;
+  color: var(--ink);
+  margin: 0;
+  transition: opacity 0.8s var(--ease-soft);
+}
+.garden-hint.hidden{ opacity: 0; }
+
+.garden-progress{
+  position: fixed;
+  top: 24px; right: 26px;
+  z-index: 20;
+  font-family: var(--font-ui);
+  font-weight: 300;
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+  letter-spacing: 0.4px;
+  background: rgba(255,255,255,0.5);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  padding: 7px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.7);
+  opacity: 0;
+  transform: translateY(-6px);
+  transition: opacity 0.6s var(--ease-soft), transform 0.6s var(--ease-soft);
+}
+.garden-progress.shown{ opacity: 1; transform: translateY(0); }
+
+.garden-field{
+  position: relative;
+  width: 100%;
+  min-height: 105vh;
+  padding-bottom: 8vh;
+}
+.garden-field.shaking{ animation: garden-shake 0.75s ease-in-out; }
+@keyframes garden-shake{
+  0%,100%{ transform: translateX(0); }
+  20%{ transform: translateX(-5px) rotate(-0.35deg); }
+  40%{ transform: translateX(5px) rotate(0.35deg); }
+  60%{ transform: translateX(-3px) rotate(-0.2deg); }
+  80%{ transform: translateX(3px) rotate(0.2deg); }
+}
+
+/* =================================================================
+   5. FLOWERS
+   ================================================================= */
+.flower{
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  transform: translate(-50%, -50%) rotate(var(--rot)) scale(var(--fscale));
+  width: 145px;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  z-index: 4;
+  animation: sway var(--sway-dur, 7s) ease-in-out var(--sway-delay, 0s) infinite;
+  transform-origin: 50% 85%;
+}
+.flower:focus-visible .lily-svg{ outline: 2px solid var(--gold); outline-offset: 6px; border-radius: 50%; }
+
+@keyframes sway{
+  0%,100%{ rotate: 0deg; }
+  50%{ rotate: 2.2deg; }
+}
+.flower{ rotate: 0deg; } /* base so keyframe 'rotate' property composes with transform above */
+
+.flower-glow{
+  position: absolute;
+  left: 50%; top: 34%;
+  width: 130px; height: 130px;
+  transform: translate(-50%,-50%);
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,245,220,0.42) 0%, rgba(255,245,220,0) 68%);
+  opacity: 0;
+  transition: opacity 1.4s var(--ease-soft);
+  pointer-events: none;
+  z-index: 1;
+}
+.flower.open .flower-glow{ opacity: 0.9; }
+
+.lily-svg{ position: relative; z-index: 2; width: 100%; height: auto; overflow: visible; display:block; }
+
+.stem{ fill: none; stroke: var(--sage-deep); stroke-width: 2.4; stroke-linecap: round; opacity: 0.85; }
+.leaf{ fill: var(--sage); opacity: 0.8; }
+
+.petal-shape{ transition: fill 1s var(--ease-soft); }
+.petal{
+  transform-origin: 0px 0px;
+  transform: scale(0.32) rotate(-18deg);
+  opacity: 1;
+  transition: transform 0.9s var(--ease-soft), opacity 0.8s var(--ease-soft);
+}
+.flower.open .petal{ transform: scale(0.9) rotate(0deg); opacity: 1; }
+
+.stamens{ opacity: 0; transform: scale(0.4); transform-origin: 0 0; transition: opacity 1s var(--ease-soft) 0.5s, transform 1s var(--ease-soft) 0.5s; }
+.flower.open .stamens{ opacity: 1; transform: scale(1); }
+.anther{ fill: #9C7A46; }
+.filament{ stroke: #B99A66; stroke-width: 1; }
+.pistil{ fill: var(--sage-deep); opacity: 0.9; }
+
+/* discovered marker: quiet, no badges — glow persists + tiny bloom sparkle */
+.flower.discovered .flower-glow{ opacity: 0.55; }
+.sparkle{
+  position:absolute; width:4px; height:4px; border-radius:50%;
+  background: var(--gold-soft); opacity:0; z-index:3; pointer-events:none;
+}
+.flower.discovered .sparkle{ animation: sparkle-pop 1.8s var(--ease-soft) forwards; }
+@keyframes sparkle-pop{
+  0%{ opacity:0; transform: scale(0) translateY(0); }
+  30%{ opacity:1; }
+  100%{ opacity:0; transform: scale(1.4) translateY(-30px); }
+}
+
+/* final centerpiece lily */
+.flower.final{
+  width: 190px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 1.4s var(--ease-soft), transform 1.4s var(--ease-soft);
+}
+.flower.final.ready{ opacity: 1; pointer-events: auto; }
+.garden-field.clearing .flower:not(.final){
+  animation: flower-fall 1.15s var(--fall-delay, 0s) cubic-bezier(.55,.05,.68,.19) forwards;
+  pointer-events: none;
+}
+@keyframes flower-fall{
+  0%{ opacity: 1; transform: translate(-50%, -50%) rotate(var(--rot)) scale(var(--fscale)); }
+  35%{ opacity: 1; transform: translate(calc(-50% + var(--fall-x)), calc(-50% + 18px)) rotate(calc(var(--rot) + 18deg)) scale(var(--fscale)); }
+  100%{ opacity: 0; transform: translate(calc(-50% + var(--fall-x)), calc(-50% + 115vh)) rotate(calc(var(--rot) + 75deg)) scale(0.7); }
+}
+.flower.final .flower-glow{
+  background: radial-gradient(circle, rgba(255,235,190,0.5) 0%, rgba(255,235,190,0) 68%);
+  width: 210px; height: 210px;
+}
+.flower.final.ready .flower-glow{ opacity: 1; animation: pulse-glow 3.2s ease-in-out infinite; }
+@keyframes pulse-glow{ 0%,100%{ opacity: 0.75; } 50%{ opacity: 1; } }
+
+/* =================================================================
+   6. GLASS MESSAGE CARD (modal)
+   ================================================================= */
+.overlay{
+  position: fixed; inset: 0; z-index: 50;
+  display: flex; align-items: center; justify-content: center;
+  padding: 24px;
+  background: rgba(58,54,46,0.28);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.5s var(--ease-soft);
+}
+.overlay.shown{ opacity: 1; pointer-events: auto; }
+
+.glass-card{
+  position: relative;
+  max-width: 460px;
+  width: 100%;
+  padding: 52px 40px 44px;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 22px;
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  box-shadow: var(--shadow-soft);
+  text-align: center;
+  transform: scale(0.92) translateY(14px);
+  opacity: 0;
+  transition: transform 0.55s var(--ease-soft), opacity 0.55s var(--ease-soft);
+}
+.overlay.shown .glass-card{ transform: scale(1) translateY(0); opacity: 1; }
+
+.card-mark{ font-size: 1.4rem; margin-bottom: 14px; opacity: 0.8; }
+.card-message{
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 500;
+  font-size: clamp(1.15rem, 3vw, 1.45rem);
+  line-height: 1.55;
+  color: var(--ink);
+  margin: 0;
+}
+.card-close{
+  position: absolute;
+  top: 16px; right: 18px;
+  width: 34px; height: 34px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255,255,255,0.6);
+  color: var(--ink-soft);
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.3s, color 0.3s;
+}
+.card-close:hover{ background: #fff; color: var(--ink); }
+.card-close:focus-visible{ outline: 2px solid var(--gold); outline-offset: 2px; }
+
+/* =================================================================
+   7. FINAL BIRTHDAY OVERLAY
+   ================================================================= */
+.finale{
+  position: fixed; inset: 0; z-index: 60;
+  display: flex; align-items: center; justify-content: center;
+  text-align: center;
+  padding: 8vh 8vw;
+  background:
+    radial-gradient(48% 46% at 50% 42%, rgba(117,87,57,0.34), transparent 70%),
+    radial-gradient(80% 75% at 50% 100%, rgba(63,48,36,0.5), transparent 72%),
+    #171513;
+  color: #FFF8EE;
+  opacity: 0; pointer-events: none;
+  transition: opacity 1s var(--ease-soft);
+}
+.finale.shown{ opacity: 1; pointer-events: auto; }
+.finale-particles{ position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+.finale-particle{
+  position: absolute;
+  left: var(--left);
+  bottom: -12px;
+  width: var(--size); height: var(--size);
+  border-radius: 50%;
+  background: var(--particle-color);
+  box-shadow: 0 0 12px var(--particle-color);
+  opacity: 0;
+  animation: finale-rise var(--dur) ease-in var(--delay) infinite;
+}
+@keyframes finale-rise{
+  0%{ opacity: 0; transform: translate3d(0, 0, 0) scale(0.5); }
+  15%{ opacity: 0.8; }
+  80%{ opacity: 0.55; }
+  100%{ opacity: 0; transform: translate3d(var(--drift), -110vh, 0) scale(1.15); }
+}
+.finale-inner{ max-width: 640px; position: relative; z-index: 2; }
+.finale-kicker{
+  margin: 0 0 12px;
+  color: var(--gold);
+  font-family: var(--font-ui);
+  font-size: 0.78rem;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+}
+.finale-mark{ font-size: 1.6rem; margin-bottom: 18px; color: var(--gold); }
+.finale-title{
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 500;
+  font-size: clamp(2rem, 6vw, 3.2rem);
+  line-height: 1.25;
+  margin: 0 0 22px;
+}
+.finale-text{
+  font-family: var(--font-display);
+  font-size: clamp(1.1rem, 2.6vw, 1.35rem);
+  line-height: 1.7;
+  color: #FFF8EE;
+  margin: 0 0 30px;
+  white-space: pre-line;
+}
+.finale-close{
+  padding: 14px 34px;
+  background: transparent;
+  border: 1px solid rgba(255,248,238,0.5);
+  border-radius: 999px;
+  color: #FFF8EE;
+  font-family: var(--font-ui);
+  font-size: 0.9rem;
+  letter-spacing: 0.4px;
+  cursor: pointer;
+  transition: all 0.4s var(--ease-soft);
+}
+.finale-close:hover{ background: rgba(255,255,255,0.12); border-color: var(--gold); }
+
+/* =================================================================
+   8. RESPONSIVE
+   ================================================================= */
+@media (max-width: 720px){
+  .landing-title{ font-size: clamp(3rem, 11vw, 4rem); }
+  .landing-subtitle{ max-width: 340px; font-size: 1.3rem; line-height: 1.45; }
+  .enter-btn{ padding: 19px 46px; font-size: 1.18rem; }
+  .garden-header{ padding: 7.5rem 1.25rem 1.5rem; }
+  .garden-title{ font-size: clamp(2.35rem, 9vw, 3rem); line-height: 1.08; }
+  .garden-hint{ max-width: 310px; margin: 0 auto; line-height: 1.55; font-size: 1.12rem; }
+  .garden-progress{ top: 16px; right: 16px; }
+  .garden-field{ min-height: 150vh; padding-bottom: 16vh; }
+  .flower{ width: 158px; }
+  .flower-glow{ width: 142px; height: 142px; }
+  .flower.final{ width: 190px; }
+  .flower.final .flower-glow{ width: 215px; height: 215px; }
+  .glass-card{ max-width: 370px; padding: 50px 28px 40px; }
+  .card-message{ font-size: 1.45rem; line-height: 1.5; }
+  .card-mark{ font-size: 1.7rem; }
+  .finale{ padding: 10vh 1.5rem; }
+  .finale-title{ font-size: clamp(2.2rem, 11vw, 3.2rem); }
+  .finale-text{ font-size: 1.35rem; line-height: 1.6; }
+}
+
+/* =================================================================
+   9. REDUCED MOTION
+   ================================================================= */
+@media (prefers-reduced-motion: reduce){
+  .flower{ animation: none !important; }
+  .particle{ animation: none !important; display:none; }
+  .finale-particle{ animation: none !important; display:none; }
+  .flower.final.ready .flower-glow{ animation: none !important; }
+  *{ transition-duration: 0.25s !important; }
+}
+</style>
+</head>
+<body>
+
+<div class="ambient-bg"></div>
+
+<!-- =================================================================
+     PAGE 1 — LANDING
+     ================================================================= -->
+<section id="landing">
+  <div class="particle-field" id="particles-landing"></div>
+  <div class="landing-inner">
+    <svg class="landing-mark" viewBox="0 0 40 40" fill="none">
+      <path d="M20 6 C24 14 30 16 34 16 C30 18 24 22 20 34 C16 22 10 18 6 16 C10 16 16 14 20 6 Z" fill="#FFFFFF" stroke="#C7A567" stroke-width="0.6"/>
+    </svg>
+    <h1 class="landing-title" id="landing-title">For you, my love 🤍</h1>
+    <p class="landing-subtitle" id="landing-subtitle">I made a little garden for you...</p>
+    <button class="enter-btn" id="enter-btn">Enter the garden</button>
+  </div>
+</section>
+
+<!-- =================================================================
+     PAGE 2 — GARDEN
+     ================================================================= -->
+<section id="garden">
+  <div class="garden-progress" id="garden-progress">0 of 7 discovered</div>
+
+  <div class="garden-header">
+    <h2 class="garden-title">A garden, just for you</h2>
+    <p class="garden-hint" id="garden-hint">Touch a lily to uncover a little truth about us.</p>
+  </div>
+
+  <div class="garden-field" id="garden-field">
+    <div class="particle-field" id="particles-garden"></div>
+    <!-- flowers are injected here by JavaScript -->
+  </div>
+</section>
+
+<!-- message card overlay -->
+<div class="overlay" id="overlay">
+  <div class="glass-card">
+    <button class="card-close" id="card-close" aria-label="Close">&times;</button>
+    <div class="card-mark">🤍</div>
+    <p class="card-message" id="card-message"></p>
+  </div>
+</div>
+
+<!-- final birthday overlay -->
+<div class="finale" id="finale">
+  <div class="finale-particles" id="finale-particles"></div>
+  <div class="finale-inner">
+    <div class="finale-mark">✦</div>
+    <h2 class="finale-title" id="finale-title">Happy Birthday, my love</h2>
+    <p class="finale-text" id="finale-text"></p>
+    <button class="finale-close" id="finale-close" aria-label="Restart the garden"></button>
+  </div>
+</div>
+
+<!-- reusable SVG symbols for the lily illustration -->
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <radialGradient id="petalGradient" cx="50%" cy="100%" r="120%">
+      <stop offset="0%" stop-color="#F3E4D8"/>
+      <stop offset="45%" stop-color="#FBF5EF"/>
+      <stop offset="100%" stop-color="#FFFDF9"/>
+    </radialGradient>
+    <radialGradient id="petalGradientFinal" cx="50%" cy="100%" r="120%">
+      <stop offset="0%" stop-color="#EEDCC5"/>
+      <stop offset="55%" stop-color="#FAF1E4"/>
+      <stop offset="100%" stop-color="#FFFDF8"/>
+    </radialGradient>
+
+    <symbol id="lilyPetal" viewBox="-30 -105 60 110">
+      <path class="petal-shape" d="M0,0 C-16,-14 -21,-42 -11,-72 C-5,-90 -1,-99 0,-104 C1,-99 5,-90 11,-72 C21,-42 16,-14 0,0 Z"
+            fill="url(#petalGradient)" stroke="rgba(196,176,140,0.45)" stroke-width="0.6"/>
+      <path d="M0,-6 L0,-96" stroke="rgba(196,176,140,0.3)" stroke-width="0.6" fill="none"/>
+      <path d="M0,-20 C-4,-35 -6,-50 -6,-65" stroke="rgba(196,176,140,0.2)" stroke-width="0.4" fill="none"/>
+      <path d="M0,-20 C4,-35 6,-50 6,-65" stroke="rgba(196,176,140,0.2)" stroke-width="0.4" fill="none"/>
+    </symbol>
+
+    <symbol id="lilyPetalFinal" viewBox="-30 -105 60 110">
+      <path class="petal-shape" d="M0,0 C-16,-14 -21,-42 -11,-72 C-5,-90 -1,-99 0,-104 C1,-99 5,-90 11,-72 C21,-42 16,-14 0,0 Z"
+            fill="url(#petalGradientFinal)" stroke="rgba(199,165,103,0.55)" stroke-width="0.6"/>
+      <path d="M0,-6 L0,-96" stroke="rgba(199,165,103,0.35)" stroke-width="0.6" fill="none"/>
+      <path d="M0,-20 C-4,-35 -6,-50 -6,-65" stroke="rgba(199,165,103,0.25)" stroke-width="0.4" fill="none"/>
+      <path d="M0,-20 C4,-35 6,-50 6,-65" stroke="rgba(199,165,103,0.25)" stroke-width="0.4" fill="none"/>
+    </symbol>
+  </defs>
+</svg>
+
+<script>
+/* =====================================================================
+   ╔═══════════════════════════════════════════════════════════════╗
+   ║   ✏️  EDIT YOUR CONTENT HERE — THIS IS THE ONLY SECTION        ║
+   ║       YOU NEED TO TOUCH TO PERSONALIZE THE WEBSITE             ║
+   ╚═══════════════════════════════════════════════════════════════╝
+
+   - "message"  : the romantic note shown when that lily is opened.
+   - "x" / "y"   : position of the flower on screen, as a PERCENTAGE
+                   of the garden area (0% = left/top, 100% = right/bottom).
+                   Separate values are given for desktop and mobile so the
+                   layout stays natural on both.
+   - "rot"      : a small tilt in degrees, purely for a natural look.
+   - "scale"    : relative size of that flower (1 = normal).
+
+   You can safely change the text of any message without touching
+   anything else. If you just want to edit the WORDS, only look for
+   the "message:" and "text:" lines below.
+   ===================================================================== */
+
+const GIFT_CONFIG = {
+
+  // ---- Landing page (Page 1) ------------------------------------------
+  landing: {
+    title:    "For you, my love 🤍",
+    subtitle: "I made a little garden for you...",
+    button:   "Enter the garden"
+  },
+
+  // ---- The 7 lilies (Page 2) -------------------------------------------
+  // Change only the "message" text for each flower to personalize it.
+  flowers: [
+    {
+      message: "There’s something about your eyes that I could never get tired of looking at. The way they shine, the little details in your face, your smile, and every tiny feature that makes you you… somehow, you always manage to be more beautiful in my eyes. You’re genuinely captivating to me, in a way I could never fully put into words.",
+      desktop: { x: 14, y: 24 }, mobile: { x: 20, y: 8 },
+      rot: -9, scale: 0.92
+    },
+    {
+      message: "I don’t think you realize how much I love hearing your voice. I could listen to you talk about the simplest things and still never get bored. There’s just something about your voice that makes me want to stay a little longer every time.",
+      desktop: { x: 83, y: 20 }, mobile: { x: 80, y: 8 },
+      rot: 7, scale: 1.0
+    },
+    {
+      message: "Some of my favorite moments are simply the ones I spend with you, talking about everything and nothing at the same time. I love every conversation, every random topic, every little detail we share. Somehow, even the most ordinary moments feel special when they’re with you.",
+      desktop: { x: 9, y: 60 }, mobile: { x: 20, y: 30 },
+      rot: -6, scale: 0.88
+    },
+    {
+      message: "Sometimes I wish I could pause time whenever I’m with you. I hate how quickly our moments pass, especially when I have to leave and get busy with everything else. If I could choose, I’d have nothing to distract me from you, and I’d just stay there with you a little longer… every single time.",
+      desktop: { x: 89, y: 56 }, mobile: { x: 80, y: 30 },
+      rot: 11, scale: 1.05
+    },
+    {
+      message: "I never want to be someone who makes you question whether you can count on me. I don’t intend to ever let you down, not when it comes to the little things or the things that truly matter. I want to be someone you can trust, someone who keeps his word, and someone who always chooses you with sincerity.",
+      desktop: { x: 30, y: 80 }, mobile: { x: 20, y: 52 },
+      rot: -13, scale: 0.95
+    },
+    {
+      message: "Even now, I still find myself falling for you with every moment we share, as if I’m meeting you for the very first time. Somehow, my heart keeps finding new reasons to love you, and I don’t think I’ll ever get tired of that feeling.",
+      desktop: { x: 68, y: 82 }, mobile: { x: 80, y: 52 },
+      rot: 5, scale: 1.0
+    },
+    {
+      message: "One of the greatest things I’ve ever achieved in my life is having you in it. And I don’t want you to be just a beautiful part of my life for a while — I want you to be my future. I intend to marry you as soon as I can, and I want to build a life with you, not just share moments with you. You’re someone I choose for the long run, and I hope I get to call you my wife very soon.",
+      desktop: { x: 50, y: 12 }, mobile: { x: 50, y: 72 },
+      rot: 3, scale: 0.85
+    }
+  ],
+
+  // ---- The final, special lily in the center -----------------------
+  final: {
+    desktop: { x: 50, y: 50 },
+    mobile:  { x: 50, y: 50 },
+    title:   "Happy Birthday, my love",
+    // Use a blank line to create a paragraph break.
+    text:
+`Every one of these lilies is small, but together they're everything I feel about you.
+
+I hope this year holds every soft, quiet, wonderful thing you deserve — and I hope I get to watch it happen right beside you.
+
+Happy birthday. I love you more than this little garden could ever hold.`,
+    closeLabel: ""
+  }
+};
+
+/* =====================================================================
+   END OF EDITABLE CONTENT — everything below runs the website.
+   You don't need to change anything past this line.
+   ===================================================================== */
+
+(function(){
+  "use strict";
+
+  const isMobile = () => window.innerWidth <= 720;
+
+  // ---------------------------------------------------------------
+  // Apply landing text from config
+  // ---------------------------------------------------------------
+  document.getElementById('landing-title').textContent = GIFT_CONFIG.landing.title;
+  document.getElementById('landing-subtitle').textContent = GIFT_CONFIG.landing.subtitle;
+  document.getElementById('enter-btn').textContent = GIFT_CONFIG.landing.button;
+  document.getElementById('finale-close').textContent = GIFT_CONFIG.final.closeLabel;
+
+  // ---------------------------------------------------------------
+  // Page 1 -> Page 2 transition
+  // ---------------------------------------------------------------
+  const landing = document.getElementById('landing');
+  const garden  = document.getElementById('garden');
+
+  document.getElementById('enter-btn').addEventListener('click', () => {
+    landing.classList.add('leaving');
+    setTimeout(() => {
+      landing.style.display = 'none';
+      garden.style.display = 'block';
+      // force reflow so the transition below actually animates
+      void garden.offsetWidth;
+      garden.classList.add('visible');
+      window.scrollTo({ top: 0, behavior: 'instant' in window ? 'instant' : 'auto' });
+      startGardenAmbience();
+    }, 950);
+  });
+
+  // ---------------------------------------------------------------
+  // Build a single lily flower's SVG markup
+  // ---------------------------------------------------------------
+  function buildLilySVG(isFinal){
+    const petalRef = isFinal ? '#lilyPetalFinal' : '#lilyPetal';
+    let petals = '';
+    for (let i = 0; i < 6; i++){
+      const angle = i * 60;
+      petals += `<g transform="rotate(${angle})"><use href="${petalRef}" class="petal"/></g>`;
+    }
+    let stamens = '';
+    for (let i = 0; i < 6; i++){
+      const angle = i * 60 + 30;
+      stamens += `
+        <g transform="rotate(${angle})">
+          <line class="filament" x1="0" y1="0" x2="0" y2="-46" />
+          <ellipse class="anther" cx="0" cy="-48" rx="5" ry="2.4" transform="rotate(90 0 -48)"/>
+        </g>`;
+    }
+
+    return `
+      <svg class="lily-svg" viewBox="-100 -150 200 260" xmlns="http://www.w3.org/2000/svg">
+        <g class="stem-group">
+          <path class="stem" d="M0,20 C-6,68 6,118 -2,150" />
+          <path class="leaf" d="M-2,60 C-30,58 -44,72 -54,90 C-36,86 -16,80 -2,70 Z" />
+          <path class="leaf" d="M0,95 C26,96 38,112 46,130 C28,124 10,116 0,105 Z" />
+        </g>
+        <g class="petals">${petals}</g>
+        <g class="stamens">
+          ${stamens}
+          <ellipse class="pistil" cx="0" cy="-6" rx="2.6" ry="14"/>
+        </g>
+      </svg>`;
+  }
+
+  // ---------------------------------------------------------------
+  // Render the 7 flowers + the final flower
+  // ---------------------------------------------------------------
+  const field = document.getElementById('garden-field');
+  let discoveredCount = 0;
+
+  function renderFlowers(){
+    field.querySelectorAll('.flower').forEach(f => f.remove());
+
+    GIFT_CONFIG.flowers.forEach((cfg, index) => {
+      const pos = isMobile() ? cfg.mobile : cfg.desktop;
+      const btn = document.createElement('button');
+      btn.className = 'flower';
+      btn.type = 'button';
+      btn.setAttribute('aria-label', 'Discover a message');
+      btn.style.setProperty('--x', pos.x + '%');
+      btn.style.setProperty('--y', pos.y + '%');
+      btn.style.setProperty('--rot', cfg.rot + 'deg');
+      btn.style.setProperty('--fscale', cfg.scale);
+      btn.style.setProperty('--sway-dur', (6 + (index % 3)) + 's');
+      btn.style.setProperty('--sway-delay', (index * 0.4) + 's');
+      btn.style.setProperty('--fall-x', ((index % 2 ? 1 : -1) * (30 + index * 8)) + 'px');
+      btn.style.setProperty('--fall-delay', (index * 0.08) + 's');
+      btn.dataset.index = index;
+
+      btn.innerHTML = `
+        <div class="flower-glow"></div>
+        ${buildLilySVG(false)}
+        <span class="sparkle" style="left:50%;top:20%"></span>
+      `;
+
+      btn.addEventListener('click', () => openFlower(btn, cfg.message, index));
+      field.appendChild(btn);
+    });
+
+    // final centerpiece flower
+    const finalPos = isMobile() ? GIFT_CONFIG.final.mobile : GIFT_CONFIG.final.desktop;
+    const finalBtn = document.createElement('button');
+    finalBtn.className = 'flower final';
+    finalBtn.type = 'button';
+    finalBtn.id = 'final-flower';
+    finalBtn.setAttribute('aria-label', 'A final message');
+    finalBtn.style.setProperty('--x', finalPos.x + '%');
+    finalBtn.style.setProperty('--y', finalPos.y + '%');
+    finalBtn.style.setProperty('--rot', '0deg');
+    finalBtn.style.setProperty('--fscale', 1);
+    finalBtn.style.setProperty('--sway-dur', '8s');
+    finalBtn.style.setProperty('--sway-delay', '0s');
+    finalBtn.innerHTML = `<div class="flower-glow"></div>${buildLilySVG(true)}`;
+    finalBtn.addEventListener('click', openFinale);
+    field.appendChild(finalBtn);
+
+    if (discoveredCount === 7) finalBtn.classList.add('ready');
+  }
+
+  window.addEventListener('resize', debounce(renderFlowers, 200));
+  function debounce(fn, ms){ let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; }
+
+  // ---------------------------------------------------------------
+  // Message card (modal)
+  // ---------------------------------------------------------------
+  const overlay = document.getElementById('overlay');
+  const cardMessage = document.getElementById('card-message');
+  const hint = document.getElementById('garden-hint');
+  const progress = document.getElementById('garden-progress');
+
+  function openFlower(btn, message, index){
+    btn.classList.add('open');
+
+    cardMessage.textContent = message;
+    overlay.classList.add('shown');
+
+    if (!btn.dataset.discovered){
+      btn.dataset.discovered = 'true';
+      btn.classList.add('discovered');
+      discoveredCount++;
+      updateProgress();
+      if (discoveredCount === 1){
+        hint.classList.add('hidden');
+      }
+      if (discoveredCount === 7){
+        const finalBtn = document.getElementById('final-flower');
+        if (finalBtn) revealFinalFlower(finalBtn);
+      }
+    }
+  }
+
+  function revealFinalFlower(finalBtn){
+    field.classList.add('shaking', 'clearing');
+    if ('vibrate' in navigator) navigator.vibrate([140, 70, 220, 70, 140]);
+    hint.classList.add('hidden');
+    finalBtn.style.setProperty('--y', '50%');
+    setTimeout(() => finalBtn.classList.add('ready'), 1150);
+    setTimeout(() => field.classList.remove('shaking'), 800);
+  }
+
+  function closeCard(){
+    overlay.classList.remove('shown');
+  }
+  document.getElementById('card-close').addEventListener('click', closeCard);
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) closeCard(); });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape'){ closeCard(); closeFinale(); }
+  });
+
+  function updateProgress(){
+    progress.textContent = `${discoveredCount} of 7 discovered`;
+    progress.classList.add('shown');
+  }
+
+  // ---------------------------------------------------------------
+  // Final birthday overlay
+  // ---------------------------------------------------------------
+  const finale = document.getElementById('finale');
+  document.getElementById('finale-title').textContent = GIFT_CONFIG.final.title;
+  document.getElementById('finale-text').textContent = GIFT_CONFIG.final.text;
+
+  function openFinale(){
+    finale.classList.add('shown');
+  }
+  function closeFinale(){
+    finale.classList.remove('shown');
+  }
+  document.getElementById('finale-close').addEventListener('click', () => window.location.reload());
+  finale.addEventListener('click', (e) => { if (e.target === finale) closeFinale(); });
+
+  // ---------------------------------------------------------------
+  // Floating particles
+  // ---------------------------------------------------------------
+  function spawnParticles(containerId, count){
+    const el = document.getElementById(containerId);
+    if (!el) return;
+    for (let i = 0; i < count; i++){
+      const p = document.createElement('div');
+      p.className = 'particle';
+      const size = (Math.random() * 5 + 3).toFixed(1);
+      const left = (Math.random() * 100).toFixed(1);
+      const dur = (Math.random() * 10 + 14).toFixed(1);
+      const delay = (Math.random() * -20).toFixed(1);
+      const driftX = (Math.random() * 60 - 30).toFixed(0);
+      const peak = (Math.random() * 0.4 + 0.35).toFixed(2);
+      p.style.setProperty('--size', size + 'px');
+      p.style.left = left + '%';
+      p.style.setProperty('--dur', dur + 's');
+      p.style.setProperty('--delay', delay + 's');
+      p.style.setProperty('--drift-x', driftX + 'px');
+      p.style.setProperty('--peak', peak);
+      el.appendChild(p);
+    }
+  }
+
+  function spawnFinaleParticles(count){
+    const el = document.getElementById('finale-particles');
+    if (!el || el.childElementCount) return;
+    const colors = ['#C7A567', '#E8D3A5', '#F1C8B8', '#FFFFFF'];
+    for (let i = 0; i < count; i++){
+      const p = document.createElement('span');
+      p.className = 'finale-particle';
+      p.style.setProperty('--left', (Math.random() * 100).toFixed(1) + '%');
+      p.style.setProperty('--size', (Math.random() * 4 + 2).toFixed(1) + 'px');
+      p.style.setProperty('--dur', (Math.random() * 8 + 9).toFixed(1) + 's');
+      p.style.setProperty('--delay', (Math.random() * -14).toFixed(1) + 's');
+      p.style.setProperty('--drift', (Math.random() * 100 - 50).toFixed(0) + 'px');
+      p.style.setProperty('--particle-color', colors[i % colors.length]);
+      el.appendChild(p);
+    }
+  }
+
+  spawnParticles('particles-landing', 14);
+  spawnFinaleParticles(30);
+  let gardenParticlesStarted = false;
+  function startGardenAmbience(){
+    if (gardenParticlesStarted) return;
+    gardenParticlesStarted = true;
+    spawnParticles('particles-garden', 26);
+  }
+
+  // ---------------------------------------------------------------
+  // Init
+  // ---------------------------------------------------------------
+  renderFlowers();
+
+})();
+</script>
+</body>
+</html>
