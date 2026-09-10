@@ -744,7 +744,8 @@ Happy birthday. I love you more than this little garden could ever hold.`,
   // Render the 7 flowers + the final flower
   // ---------------------------------------------------------------
   const field = document.getElementById('garden-field');
-  let discoveredCount = 0;
+  const discoveredFlowers = new Set();
+  const totalFlowers = GIFT_CONFIG.flowers.length;
 
   function renderFlowers(){
     field.querySelectorAll('.flower').forEach(f => f.remove());
@@ -764,6 +765,10 @@ Happy birthday. I love you more than this little garden could ever hold.`,
       btn.style.setProperty('--fall-x', ((index % 2 ? 1 : -1) * (30 + index * 8)) + 'px');
       btn.style.setProperty('--fall-delay', (index * 0.08) + 's');
       btn.dataset.index = index;
+      if (discoveredFlowers.has(index)){
+        btn.dataset.discovered = 'true';
+        btn.classList.add('discovered');
+      }
 
       btn.innerHTML = `
         <div class="flower-glow"></div>
@@ -792,7 +797,7 @@ Happy birthday. I love you more than this little garden could ever hold.`,
     finalBtn.addEventListener('click', openFinale);
     field.appendChild(finalBtn);
 
-    if (discoveredCount === 7) finalBtn.classList.add('ready');
+    if (discoveredFlowers.size === totalFlowers) finalBtn.classList.add('ready');
   }
 
   window.addEventListener('resize', debounce(renderFlowers, 200));
@@ -812,15 +817,16 @@ Happy birthday. I love you more than this little garden could ever hold.`,
     cardMessage.textContent = message;
     overlay.classList.add('shown');
 
-    if (!btn.dataset.discovered){
+    if (!discoveredFlowers.has(index)){
+      discoveredFlowers.add(index);
       btn.dataset.discovered = 'true';
       btn.classList.add('discovered');
-      discoveredCount++;
+      const discoveredCount = discoveredFlowers.size;
       updateProgress();
       if (discoveredCount === 1){
         hint.classList.add('hidden');
       }
-      if (discoveredCount === 7){
+      if (discoveredCount === totalFlowers){
         const finalBtn = document.getElementById('final-flower');
         if (finalBtn) revealFinalFlower(finalBtn);
       }
@@ -846,7 +852,7 @@ Happy birthday. I love you more than this little garden could ever hold.`,
   });
 
   function updateProgress(){
-    progress.textContent = `${discoveredCount} of 7 discovered`;
+    progress.textContent = `${discoveredFlowers.size} of ${totalFlowers} discovered`;
     progress.classList.add('shown');
   }
 
