@@ -497,6 +497,10 @@ a{ color: inherit; }
 </head>
 <body>
 
+<audio id="background-music" loop preload="auto">
+  <source src="Tay_Swift_-_This_Love_(mp3.pm).mp3" type="audio/mpeg">
+</audio>
+
 <div class="ambient-bg"></div>
 
 <!-- =================================================================
@@ -690,8 +694,11 @@ Happy birthday. I love you more than this little garden could ever hold.`,
   // ---------------------------------------------------------------
   const landing = document.getElementById('landing');
   const garden  = document.getElementById('garden');
+  const backgroundMusic = document.getElementById('background-music');
+  backgroundMusic.volume = 0.1;
 
   document.getElementById('enter-btn').addEventListener('click', () => {
+    backgroundMusic.play().catch(() => {});
     landing.classList.add('leaving');
     setTimeout(() => {
       landing.style.display = 'none';
